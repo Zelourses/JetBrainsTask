@@ -8,3 +8,5 @@ out
 *.vcxproj*
 #Lib folder
 includeLibs
+#some files that imgui does
+imgui.ini

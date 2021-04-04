@@ -37,13 +37,15 @@ int main() {
 		std::cout << "Failed to create GLFW window" << std::endl;
 		return -1;
 	}
+
+	glfwMakeContextCurrent(window);
+	glfwSwapInterval(1);
+	
 	if (!gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress))) {
 		std::cout << "Failed to create GLAD context" << std::endl;
 		return -2;
 }
 	glViewport(0, 0, src_width, src_height);
-	glfwMakeContextCurrent(window);
-	glfwSwapInterval(1);
 	
 	glfwSetFramebufferSizeCallback(window, frameBuffer_size_callback);
 
