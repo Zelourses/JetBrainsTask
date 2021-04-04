@@ -1,0 +1,10 @@
+#VS folder
+.vs
+#output
+out
+#Solution things
+*.user
+*.sln
+*.vcxproj*
+#Lib folder
+includeLibs
