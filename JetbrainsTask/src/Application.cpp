@@ -37,27 +37,25 @@ int main() {
 		std::cout << "Failed to create GLFW window" << std::endl;
 		return -1;
 	}
-	glfwMakeContextCurrent(window);
-	glfwSwapInterval(1);
-
 	if (!gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress))) {
 		std::cout << "Failed to create GLAD context" << std::endl;
 		return -2;
 }
 	glViewport(0, 0, src_width, src_height);
-
+	glfwMakeContextCurrent(window);
+	glfwSwapInterval(1);
+	
 	glfwSetFramebufferSizeCallback(window, frameBuffer_size_callback);
 
-	//IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
-	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	//ImGuiIO& io = ImGui::GetIO(); (void)io;
 	ImGui::StyleColorsDark();
 	ImGui_ImplGlfw_InitForOpenGL(window, true);
-	ImGui_ImplOpenGL3_Init((char*)glGetString(GL_NUM_SHADING_LANGUAGE_VERSIONS));
-	bool open = true;
-	int test = 0;
+	ImGui_ImplOpenGL3_Init(const_cast<char*>(reinterpret_cast<const char*>(glGetString(GL_NUM_SHADING_LANGUAGE_VERSIONS)))); //ugly, and not C style with this (char*) thing
+	
 	std::vector<std::string*> foundStrings;
-	//foundStrings.resize(200);
+
+	//Main draw loop
 	while (!glfwWindowShouldClose(window)) {
 
 		glfwPollEvents();
@@ -70,23 +68,24 @@ int main() {
 		
 		ImGui::SetNextWindowPos({ 0.0f,0.0f });
 		ImGui::SetNextWindowSize({ static_cast<float>(src_width),static_cast<float>(src_height) });
+		{
+			ImGui::Begin("Text searching");
+			ImGui::InputText("Type here!", const_cast<char*>(buffer.c_str()), BUFFER_SIZE);
+			ImGui::BeginChild("Search");
+			if (buffer != buffer2) {
+				auto* newString = new std::string("buffers not equals!");
+				foundStrings.push_back(newString);
+				buffer2 = buffer;
+			}
+			for (auto& foundString : foundStrings) {
+				//if (!foundString->empty())
+					ImGui::Text(foundString->c_str());
 
-		ImGui::Begin("Text searching");
-		ImGui::InputText("Type here!", const_cast<char*>(buffer.c_str()), BUFFER_SIZE);
-		ImGui::BeginChild("Search");
-		if (buffer != buffer2) {
-			auto* newString = new std::string("buffers not equals!");
-			foundStrings.push_back(newString);
-			buffer2 = buffer;
+			}
+			
+			ImGui::EndChild();
+			ImGui::End();
 		}
-		for (auto& foundString : foundStrings) {
-			ImGui::Text(foundString->c_str());
-
-		}
-		
-		ImGui::EndChild();
-		ImGui::End();
-
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
