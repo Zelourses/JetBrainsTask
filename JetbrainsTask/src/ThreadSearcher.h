@@ -6,25 +6,33 @@
 #include <thread>
 #include <atomic>
 class ThreadSearcher {
+public:
+
+	void startSearch(std::string& name, std::string& file);
+	void startSearch(std::string& name, std::string_view& file);
+	void startSearch(std::string& name, const char * file);
+	inline bool isSearchFinished() const {
+		return isFinished;	//I am not sure about this. Does it creates unnecessary copies or not?
+	}
+	bool tryToGetData(std::vector<std::string*>& in_vector);
+	void stopSearch();
+	inline bool isThreadGood() const {
+		return isThreadOkay;
+	}
+
 private:
 	std::vector<std::string*> strings;
 	std::string nameToSearch;
 	std::string filePath;
 	std::mutex searchMutex;
-	std::atomic_bool isFinished = false;
+	std::atomic_bool isFinished = true;
 
-	std::thread searchThread;
+	std::jthread searchThread;
+	std::atomic_bool shouldThreadKillHimself = false;
 
+	std::atomic_bool isThreadOkay = true;
 
 	void threadSearchFunc();
-public:
-	ThreadSearcher(std::string name, std::string filePath);
-
-	void startSearch();
-
-	inline bool isSearchFinished() const;
-	
-	bool tryToWriteData(std::vector<std::string*>& in_vector);
 	
 };
 

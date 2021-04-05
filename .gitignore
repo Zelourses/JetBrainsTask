@@ -10,3 +10,5 @@ out
 includeLibs
 #some files that imgui does
 imgui.ini
+#Dictionaries
+*.txt

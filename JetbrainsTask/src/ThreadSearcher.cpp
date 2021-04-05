@@ -1,71 +1,96 @@
 #include "ThreadSearcher.h"
 
-#include <utility>
 #include <fstream>
 #include <array>
-#include <stdexcept>
+#include <iostream>
 
-static const int AMOUNT_OF_TEMP_ELEMENTS = 10;
+static const int AMOUNT_OF_TEMP_ELEMENTS = 30;
 
 void ThreadSearcher::threadSearchFunc() {
+	
+	shouldThreadKillHimself = false;
+	isThreadOkay = true;
 	std::string inputString;
-	auto fileStream = std::fstream(filePath);
+	std::ifstream fileStream = std::ifstream(filePath);
 	std::array<std::string*, AMOUNT_OF_TEMP_ELEMENTS > found{};
+	std::string tmpName = std::string(nameToSearch);
 	int i = 0;
 	if (fileStream.is_open()) {
-		isFinished = false;
+		isFinished = false;		
 		while (fileStream.good()) {
 			fileStream >> inputString;
-			if (inputString.find(filePath) !=std::string::npos) {
+			if (inputString.find(tmpName) != std::string::npos) {
 				found[i] = new std::string(inputString);
 				++i;
-				if (i == AMOUNT_OF_TEMP_ELEMENTS-1) {
+				if (i == AMOUNT_OF_TEMP_ELEMENTS - 1) {
 					searchMutex.lock();
-					for (int j = 0; j < i;++j) {
+					//std::cout << "We locked" << std::endl;
+					for (int j = 0; j < i; ++j) {
 						strings.push_back(found[j]);
 					}
 					searchMutex.unlock();
 					i = 0;
 				}
 			}
-			if(i>0){
-				searchMutex.lock();
-				for (int j = 0; j < i; ++j) {
-					strings.push_back(found[j]);
-				}
-				searchMutex.unlock();
-			}
-			isFinished = true;
+
 		}
-		
+		if (i > 0 && !shouldThreadKillHimself) {
+			searchMutex.lock();
+			for (int j = 0; j < i; ++j) {
+				strings.push_back(found[j]);
+			}
+			searchMutex.unlock();
+			isFinished = true;
+			return;
+		}
+		isFinished = true;
+		searchMutex.lock();
+		for (auto& val : strings)
+			delete val;
+		strings.clear();
+		searchMutex.unlock();
 	}
-	else
-		throw std::invalid_argument("Problem with file");
+	else {
+		isThreadOkay = false;
+	}
 }
 
-ThreadSearcher::ThreadSearcher(std::string name, std::string filePath)
-	: nameToSearch(std::move(name)), filePath(std::move(filePath)) { }
-
-void ThreadSearcher::startSearch() {
+void ThreadSearcher::startSearch(std::string& name, std::string& file) {
+	nameToSearch = name;
+	filePath = file;
 	//This was hard
-	searchThread = std::thread([&](ThreadSearcher* searcher) {
+	searchThread = std::jthread([&](ThreadSearcher* searcher) {
 		searcher->threadSearchFunc();
 	},this);
 }
-
-bool ThreadSearcher::isSearchFinished() const{
-	return isFinished;	//I am not sure about this. Does it creates unnecessary copies or not?
+void ThreadSearcher::startSearch(std::string& name, std::string_view& file) {
+	std::string file_string(file);
+	startSearch(name,file_string);
+}
+void ThreadSearcher::startSearch(std::string& name, const char* file) {
+	std::string file_string(file);
+	startSearch(name, file_string);
 }
 
-bool ThreadSearcher::tryToWriteData(std::vector<std::string*>& in_vector) {
+//inline bool ThreadSearcher::isSearchFinished() const{
+//	return isFinished;	//I am not sure about this. Does it creates unnecessary copies or not?
+//}
+
+bool ThreadSearcher::tryToGetData(std::vector<std::string*>& in_vector) {
 	if (!searchMutex.try_lock()) {
 		return false;
 	}
+	//std::cout << "Wa passed mutex barrier\n";
 	for (auto& val : strings) {
 		in_vector.push_back(val);
 	}
+	strings.clear();
 	searchMutex.unlock();
 	return true;
+}
+
+void ThreadSearcher::stopSearch() {
+	shouldThreadKillHimself = true;
 }
 
 
