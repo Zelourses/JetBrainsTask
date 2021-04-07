@@ -7,6 +7,12 @@ workspace "JetbrainsTask"
     }
 
 outputDir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
+
+includeDir = {}
+includeDir["GLFW"] = "JetbrainsTask/vendor/glfw/include"
+
+include "JetbrainsTask/vendor/glfw"
+
 project "JetbrainsTask"
     location "JetbrainsTask"
     kind "ConsoleApp"
@@ -25,16 +31,17 @@ project "JetbrainsTask"
         "%{prj.name}/src",
         "%{prj.name}/src/vendor",
         "./vendorInclude",
-        "./vendor/glfw/include"
+        "%{includeDir.GLFW}"
     }
-    bindirs {
+    --[[ bindirs {
         "{prj.name}/../includeLibs/"
     }
     libdirs {
         "%{prj.name}/../includeLibs/"
-    }
+    } ]]
     links {
-        "glfw3"
+        "GLFW",
+        "opengl32.lib"
     }
 
     filter "system:windows"

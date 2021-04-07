@@ -1,1 +1,4 @@
 
+[submodule "JetbrainsTask/vendor/glfw"]
+	path = JetbrainsTask/vendor/glfw
+	url = https://github.com/Zelourses/glfw

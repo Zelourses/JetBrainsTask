@@ -12,7 +12,6 @@
 
 static int src_width = 1200;
 static int src_height = 700;
-static const int BUFFER_SIZE = 255;
 
 static void frameBuffer_size_callback(GLFWwindow* window, int width, int height) {
 	src_width = width;
@@ -42,7 +41,7 @@ int main() {
 	}
 
 	glfwMakeContextCurrent(window);
-	glfwSwapInterval(1);
+	glfwSwapInterval(1); //vsync
 	
 	if (!gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress))) {
 		std::cout << "Failed to create GLAD context" << std::endl;
@@ -83,6 +82,7 @@ int main() {
 		ImGui::NewFrame();
 		ImGui::SetNextWindowPos({ 0.0f,0.0f });
 		ImGui::SetNextWindowSize({ static_cast<float>(src_width),static_cast<float>(src_height) });
+		
 		ImGui::Begin("Text searching");
 		ImGui::InputText("Type here!",&buffer);
 		if (!searcher.isSearchFinished()) {
@@ -90,11 +90,11 @@ int main() {
 			ImGui::Text("Searching...");
 		}
 		ImGui::BeginChild("Search");
-		if (countSecond > 1.0f) {
-			std::cout << buffer << '\n';
-			canWeCloseWindow = true;
-			searcher.stopSearch();
-			searcher.startSearch(buffer, "words.txt");
+		if (countSecond > 1.0l) {
+			//std::cout << "Buffer value:" << buffer << '\n';
+				canWeCloseWindow = true;
+				searcher.stopSearch();
+				searcher.startSearch(buffer, "words.txt");
 			buffer2 = buffer;
 			for (auto& val :foundStrings) {
 				delete val;
@@ -102,12 +102,15 @@ int main() {
 			foundStrings.clear();
 			countSecond = 0;
 		}
-		searcher.tryToGetData(foundStrings);
-		for (auto& foundString : foundStrings) {
-			if (!foundString->empty())
-				ImGui::Text(foundString->c_str());
+		
+		if(searcher.tryToGetData(foundStrings)){
+			for (auto& foundString : foundStrings) {
+				//if (!foundString->empty())
+					ImGui::Text(foundString->c_str());
 
+			}
 		}
+		
 		ImGui::EndChild();
 		ImGui::End();
 		

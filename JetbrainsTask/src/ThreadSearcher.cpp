@@ -3,34 +3,41 @@
 #include <fstream>
 #include <array>
 #include <iostream>
+#include <algorithm>
 
-static const int AMOUNT_OF_TEMP_ELEMENTS = 30;
+static const int AMOUNT_OF_TEMP_ELEMENTS = 5; //MORE THAN ZERO
 
 void ThreadSearcher::threadSearchFunc() {
-	
 	shouldThreadKillHimself = false;
 	isThreadOkay = true;
 	std::string inputString;
 	std::ifstream fileStream = std::ifstream(filePath);
 	std::array<std::string*, AMOUNT_OF_TEMP_ELEMENTS > found{};
 	std::string tmpName = std::string(nameToSearch);
-	int i = 0;
+
+	static_assert(AMOUNT_OF_TEMP_ELEMENTS > 0);
+	int i = 0; 
 	if (fileStream.is_open()) {
-		isFinished = false;		
-		while (fileStream.good()) {
+		isFinished = false;
+		while (fileStream.good() && !shouldThreadKillHimself) {
 			fileStream >> inputString;
 			if (inputString.find(tmpName) != std::string::npos) {
 				found[i] = new std::string(inputString);
-				++i;
 				if (i == AMOUNT_OF_TEMP_ELEMENTS - 1) {
+					
 					searchMutex.lock();
-					//std::cout << "We locked" << std::endl;
-					for (int j = 0; j < i; ++j) {
+					for (int j = 0; j < AMOUNT_OF_TEMP_ELEMENTS; ++j) {
 						strings.push_back(found[j]);
 					}
 					searchMutex.unlock();
-					i = 0;
+					/*
+					 * If I set this to 0, we need to check if this constant more than max. value
+					 * It's useless branch and branch-prediction
+					 * Or maybe I'm wrong
+					 */
+					i = -1;
 				}
+				++i;
 			}
 
 		}
@@ -59,7 +66,9 @@ void ThreadSearcher::startSearch(std::string& name, std::string& file) {
 	nameToSearch = name;
 	filePath = file;
 	//This was hard
-	searchThread = std::jthread([&](ThreadSearcher* searcher) {
+	if (searchThread.joinable())
+		searchThread.detach();
+	searchThread = std::thread([&](ThreadSearcher* searcher) {
 		searcher->threadSearchFunc();
 	},this);
 }
@@ -72,18 +81,12 @@ void ThreadSearcher::startSearch(std::string& name, const char* file) {
 	startSearch(name, file_string);
 }
 
-//inline bool ThreadSearcher::isSearchFinished() const{
-//	return isFinished;	//I am not sure about this. Does it creates unnecessary copies or not?
-//}
-
 bool ThreadSearcher::tryToGetData(std::vector<std::string*>& in_vector) {
 	if (!searchMutex.try_lock()) {
 		return false;
 	}
-	//std::cout << "Wa passed mutex barrier\n";
-	for (auto& val : strings) {
-		in_vector.push_back(val);
-	}
+	std::ranges::for_each(strings, [&in_vector](auto x) {in_vector.push_back(x); });
+	
 	strings.clear();
 	searchMutex.unlock();
 	return true;
@@ -91,6 +94,11 @@ bool ThreadSearcher::tryToGetData(std::vector<std::string*>& in_vector) {
 
 void ThreadSearcher::stopSearch() {
 	shouldThreadKillHimself = true;
+}
+
+ThreadSearcher::~ThreadSearcher() {
+	if (searchThread.joinable())
+		searchThread.detach();
 }
 
 

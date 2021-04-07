@@ -5,6 +5,7 @@
 #include <mutex>
 #include <thread>
 #include <atomic>
+#include <condition_variable>
 class ThreadSearcher {
 public:
 
@@ -20,15 +21,19 @@ public:
 		return isThreadOkay;
 	}
 
+	~ThreadSearcher();
+
 private:
 	std::vector<std::string*> strings;
 	std::string nameToSearch;
 	std::string filePath;
 	std::mutex searchMutex;
 	std::atomic_bool isFinished = true;
+	
 
-	std::jthread searchThread;
+	std::thread searchThread;
 	std::atomic_bool shouldThreadKillHimself = false;
+	std::condition_variable putThreadToSleep;
 
 	std::atomic_bool isThreadOkay = true;
 
