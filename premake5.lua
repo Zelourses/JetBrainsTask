@@ -45,6 +45,10 @@ project "JetbrainsTask"
         links {
             "opengl32.lib"
         }
+        linkoptions {
+            --https://docs.microsoft.com/en-us/previous-versions/visualstudio/visual-studio-2010/f9t8842e(v=vs.100)
+            "/ENTRY:mainCRTStartup" -- Wow, microsoft
+        }
 
     filter "system:macosx"
         --Sreiosly, Apple? Why
