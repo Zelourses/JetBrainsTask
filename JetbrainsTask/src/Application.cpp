@@ -43,7 +43,7 @@ int main() {
 		
 		ImGui::Begin("Text searching");
 		ImGui::InputText("Type here!",&buffer);
-		ImGui::SetWindowFontScale(1.3l);
+		ImGui::SetWindowFontScale(1.3f);
 		if (!searcher.isSearchFinished()) {
 			ImGui::Text("\tSearching...");
 		}else {
