@@ -16,7 +16,7 @@ include "JetbrainsTask/vendor/glfw"
 project "JetbrainsTask"
     location "JetbrainsTask"
     language "C++"
-    cppdialect "C++11"
+    cppdialect "C++17"
     systemversion "latest"
 
     targetdir ("out/"..outputDir.. "/%{prj.name}")
@@ -39,11 +39,15 @@ project "JetbrainsTask"
     }
 
     filter "system:windows"
+        buildoptions {
+            "/Zc:__cplusplus" --for __cplusplus macro work
+        }
         links {
             "opengl32.lib"
         }
 
     filter "system:macosx"
+        --Sreiosly, Apple? Why
         linkoptions {
             "-framework OpenGL",
             "-framework Cocoa",
@@ -51,6 +55,14 @@ project "JetbrainsTask"
             "-framework CoreVideo"
         }
         
+    filter "system:linux"
+        buildoptions {
+            "GL",
+            "X11",
+            "pthread",
+            "glfw3",
+            "Xrandr"
+        }
 
     filter "configurations:Debug"
         defines {

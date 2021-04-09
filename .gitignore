@@ -2,13 +2,21 @@
 .vs
 #output
 out
+#Junk build files
+/**/Makefile
+
 #Solution things
 *.user
 *.sln
 *.vcxproj*
-#Lib folder
-includeLibs
 #some files that imgui does
 imgui.ini
-#Dictionaries
+#Dictionary
 *.txt
+
+##Apple
+#Xcode folders
+*.xcworkspace
+*.xcodeproj
+#Apple junk
+.DS_Store
