@@ -15,8 +15,9 @@ include "JetbrainsTask/vendor/glfw"
 
 project "JetbrainsTask"
     location "JetbrainsTask"
-    kind "ConsoleApp"
     language "C++"
+    cppdialect "C++11"
+    systemversion "latest"
 
     targetdir ("out/"..outputDir.. "/%{prj.name}")
     objdir ("out/build/"..outputDir.. "/%{prj.name}")
@@ -33,30 +34,35 @@ project "JetbrainsTask"
         "./vendorInclude",
         "%{includeDir.GLFW}"
     }
-    --[[ bindirs {
-        "{prj.name}/../includeLibs/"
-    }
-    libdirs {
-        "%{prj.name}/../includeLibs/"
-    } ]]
     links {
-        "GLFW",
-        "opengl32.lib"
+        "GLFW"
     }
 
     filter "system:windows"
-        cppdialect "C++17"
-        systemversion "latest"
+        links {
+            "opengl32.lib"
+        }
+
+    filter "system:macosx"
+        linkoptions {
+            "-framework OpenGL",
+            "-framework Cocoa",
+            "-framework IOKit",
+            "-framework CoreVideo"
+        }
+        
 
     filter "configurations:Debug"
         defines {
         }
         symbols "On"
+        kind "ConsoleApp"
     
     filter "configurations:Release"
         defines {
         }
         optimize "On"
+        kind "WindowedApp"
     filter "system:macosx"
         defines {
             "T_APPLE"
