@@ -26,7 +26,7 @@ void ThreadSearcher::threadSearchFunc() {
 				if (i == AMOUNT_OF_TEMP_ELEMENTS - 1) {
 					
 					searchMutex.lock();
-					for (int j = 0; j < AMOUNT_OF_TEMP_ELEMENTS; ++j) {
+					for (auto j = 0; j < AMOUNT_OF_TEMP_ELEMENTS; ++j) {
 						strings.push_back(found[j]);
 					}
 					searchMutex.unlock();
@@ -43,7 +43,7 @@ void ThreadSearcher::threadSearchFunc() {
 		}
 		if (i > 0 && !shouldThreadKillHimself) {
 			searchMutex.lock();
-			for (int j = 0; j < i; ++j) {
+			for (auto j = 0; j < i; ++j) {
 				strings.push_back(found[j]);
 			}
 			searchMutex.unlock();
@@ -65,12 +65,18 @@ void ThreadSearcher::threadSearchFunc() {
 void ThreadSearcher::startSearch(std::string& name, std::string& file) {
 	nameToSearch = name;
 	filePath = file;
-	//This was hard
+#if __cplusplus > 201703L
+	searchThread = std::jthread([&](ThreadSearcher* searcher) {
+		searcher->threadSearchFunc();
+		}, this);
+#else
 	if (searchThread.joinable())
 		searchThread.detach();
+	//This was hard
 	searchThread = std::thread([&](ThreadSearcher* searcher) {
 		searcher->threadSearchFunc();
 	},this);
+#endif
 }
 void ThreadSearcher::startSearch(std::string& name, std::string_view& file) {
 	std::string file_string(file);
@@ -85,8 +91,13 @@ bool ThreadSearcher::tryToGetData(std::vector<std::string*>& in_vector) {
 	if (!searchMutex.try_lock()) {
 		return false;
 	}
+#if __cplusplus > 201703L
 	std::ranges::for_each(strings, [&in_vector](auto x) {in_vector.push_back(x); });
-	
+#else 
+	for(auto& val : strings) {
+		in_vector.push_back(val);
+	}
+#endif
 	strings.clear();
 	searchMutex.unlock();
 	return true;
@@ -97,8 +108,13 @@ void ThreadSearcher::stopSearch() {
 }
 
 ThreadSearcher::~ThreadSearcher() {
+	//searchMutex.unlock();
+#if __cplusplus > 201703L
+	
+#else
 	if (searchThread.joinable())
-		searchThread.detach();
+		searchThread.join();
+#endif
 }
 
 

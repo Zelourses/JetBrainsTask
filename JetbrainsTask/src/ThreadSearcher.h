@@ -30,8 +30,11 @@ private:
 	std::mutex searchMutex;
 	std::atomic_bool isFinished = true;
 	
-
+#if __cplusplus > 201703L
+	std::jthread searchThread
+#else
 	std::thread searchThread;
+#endif
 	std::atomic_bool shouldThreadKillHimself = false;
 	std::condition_variable putThreadToSleep;
 
