@@ -2,8 +2,12 @@
 
 #include <fstream>
 #include <array>
-#include <iostream>
 #include <algorithm>
+#include <filesystem>
+
+#ifdef T_APPLE
+#include "CoreFoundation/CoreFoundation.h"
+#endif
 
 static const int AMOUNT_OF_TEMP_ELEMENTS = 5; //MORE THAN ZERO
 
@@ -11,7 +15,26 @@ void ThreadSearcher::threadSearchFunc() {
 	shouldThreadKillHimself = false;
 	isThreadOkay = true;
 	std::string inputString;
+	//Why apple, just why?
+	#ifdef T_APPLE    
+		CFBundleRef mainBundle = CFBundleGetMainBundle();
+		CFURLRef resourcesURL = CFBundleCopyResourcesDirectoryURL(mainBundle);
+		char path[PATH_MAX];
+		if (!CFURLGetFileSystemRepresentation(resourcesURL, TRUE, (UInt8*)path, PATH_MAX))
+		{
+			isThreadOkay = false;
+			return;
+		}
+		CFRelease(resourcesURL);
+
+		chdir(path);
+		std::string applePath(path);
+		applePath += '/' + filePath;
+		std::ifstream fileStream = std::ifstream(applePath);
+	
+#else		
 	std::ifstream fileStream = std::ifstream(filePath);
+#endif
 	std::array<std::string*, AMOUNT_OF_TEMP_ELEMENTS > found{};
 	std::string tmpName = std::string(nameToSearch);
 

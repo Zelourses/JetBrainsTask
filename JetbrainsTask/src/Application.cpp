@@ -1,9 +1,7 @@
 #include "ThreadSearcher.h"
 #include "Window.h"
 
-#include <iostream>
 #include <vector>
-#include <stdexcept>
 
 
 
@@ -56,7 +54,7 @@ int main() {
 			canWeCloseWindow = true;
 			searcher.stopSearch();
 			if (!buffer.empty()){
-				searcher.startSearch(buffer, "words.txt");
+				searcher.startSearch(buffer, "./words.txt");
 				for (auto& val :foundStrings) {
 					delete val;
 				}
